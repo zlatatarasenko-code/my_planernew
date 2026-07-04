@@ -1256,6 +1256,16 @@ function createQuickTaskForm(dateKey) {
   const folderSelect = document.createElement("select");
   renderFolderOptions(folderSelect, INBOX_FOLDER_ID);
 
+  const dateLabel = document.createElement("label");
+  dateLabel.className = "task-field";
+
+  const dateText = document.createElement("span");
+  dateText.textContent = "Дата планирования";
+
+  const dateInput = document.createElement("input");
+  dateInput.type = "date";
+  dateInput.value = dateKey || "";
+
   const importanceLabel = document.createElement("label");
   importanceLabel.className = "task-field";
 
@@ -1277,8 +1287,9 @@ function createQuickTaskForm(dateKey) {
 
   titleLabel.append(titleText, titleInput);
   folderLabel.append(folderText, folderSelect);
+  dateLabel.append(dateText, dateInput);
   importanceLabel.append(importanceText, importanceSelect);
-  form.append(titleLabel, folderLabel, importanceLabel, submitButton);
+  form.append(titleLabel, folderLabel, dateLabel, importanceLabel, submitButton);
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -1292,7 +1303,7 @@ function createQuickTaskForm(dateKey) {
       title,
       folderId: folderSelect.value,
       importance: importanceSelect.value,
-      scheduledDate: dateKey,
+      scheduledDate: dateInput.value || undefined,
     });
     expandedFolderIds.add(folderSelect.value);
     closePlanningModal();
@@ -1373,15 +1384,17 @@ function openTaskDetailsModal(taskId) {
   const modal = document.querySelector("#task-details-modal");
   const titleInput = document.querySelector("#task-details-title-input");
   const folderInput = document.querySelector("#task-details-folder-input");
+  const dateInput = document.querySelector("#task-details-date-input");
   const importanceInput = document.querySelector("#task-details-importance-input");
   const task = findTaskById(taskId);
 
-  if (!modal || !titleInput || !folderInput || !importanceInput || !task) {
+  if (!modal || !titleInput || !folderInput || !dateInput || !importanceInput || !task) {
     return;
   }
 
   detailsTaskId = taskId;
   titleInput.value = task.title;
+  dateInput.value = task.scheduledDate || "";
   importanceInput.value = task.importance || "important";
   renderFolderOptions(folderInput, task.folderId);
   renderChecklistEditor(task);
@@ -1416,9 +1429,10 @@ function saveTaskDetails() {
   const task = findTaskById(detailsTaskId);
   const titleInput = document.querySelector("#task-details-title-input");
   const folderInput = document.querySelector("#task-details-folder-input");
+  const dateInput = document.querySelector("#task-details-date-input");
   const importanceInput = document.querySelector("#task-details-importance-input");
 
-  if (!task || !titleInput || !folderInput || !importanceInput) {
+  if (!task || !titleInput || !folderInput || !dateInput || !importanceInput) {
     return;
   }
 
@@ -1431,6 +1445,15 @@ function saveTaskDetails() {
   task.title = title;
   task.folderId = folderInput.value;
   task.importance = importanceInput.value;
+
+  if (dateInput.value) {
+    task.scheduledDate = dateInput.value;
+    task.carriedOver = false;
+  } else {
+    delete task.scheduledDate;
+    task.carriedOver = false;
+  }
+
   task.updatedAt = new Date().toISOString();
   persistAndRender();
   closeTaskDetailsModal();
