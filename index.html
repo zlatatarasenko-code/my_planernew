@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Адаптивный недельный планировщик</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app" class="app mobile-view-week">
+      <div class="planner-layout">
+        <aside id="task-sidebar" class="task-sidebar" aria-label="Панель задач">
+          <header class="sidebar-header">
+            <div class="brand-mark" aria-hidden="true">ZT</div>
+            <div class="sidebar-copy">
+              <h1 id="app-title">Неделя в фокусе</h1>
+            </div>
+          </header>
+
+          <div class="sidebar-actions">
+            <button id="add-task-button" class="button-secondary" type="button">
+              <span class="button-icon" aria-hidden="true">+</span>
+              <span class="sidebar-text">Добавить задачу</span>
+            </button>
+            <button id="create-folder-button" class="button-secondary" type="button">
+              <span class="button-icon" aria-hidden="true">+</span>
+              <span class="sidebar-text">Добавить папку</span>
+            </button>
+          </div>
+
+          <nav class="folder-list" aria-label="Папки">
+            <p class="section-label sidebar-text">Папки</p>
+            <div id="folder-list"></div>
+          </nav>
+        </aside>
+
+        <main class="week-panel" aria-labelledby="week-title">
+          <div class="topbar">
+            <button
+              id="open-sidebar-button"
+              class="button-secondary sidebar-open-button"
+              type="button"
+              hidden
+            >
+              Открыть задачи
+            </button>
+
+            <div class="sidebar-state-controls" aria-label="Состояния панели">
+              <button class="state-button is-active" type="button" data-sidebar-state="full">
+                Полная
+              </button>
+              <button class="state-button" type="button" data-sidebar-state="narrow">
+                Узкая
+              </button>
+              <button class="state-button" type="button" data-sidebar-state="hidden">
+                Скрыть
+              </button>
+            </div>
+          </div>
+
+          <section class="week-surface">
+            <div class="week-heading">
+              <div>
+                <p class="eyebrow">Неделя</p>
+                <h2 id="week-title">Сетка недели</h2>
+                <p id="week-range" class="week-range" aria-live="polite"></p>
+              </div>
+              <div class="week-toolbar">
+                <div class="week-controls" aria-label="Управление неделей">
+                  <button
+                    id="prev-week-button"
+                    class="week-nav-button"
+                    type="button"
+                    aria-label="Предыдущая неделя"
+                  >
+                    &lt;-
+                  </button>
+                  <button id="today-week-button" class="button-secondary" type="button">
+                    Сегодня
+                  </button>
+                  <button
+                    id="next-week-button"
+                    class="week-nav-button"
+                    type="button"
+                    aria-label="Следующая неделя"
+                  >
+                    -&gt;
+                  </button>
+                </div>
+                <p id="storage-status" class="storage-status" aria-live="polite">
+                  Проверяем локальные данные...
+                </p>
+              </div>
+            </div>
+
+            <div id="week-grid" class="week-grid" aria-label="Недельная сетка"></div>
+          </section>
+        </main>
+      </div>
+
+      <nav class="bottom-tabbar" aria-label="Основная навигация">
+        <button class="bottom-tab" type="button" data-mobile-tab="tasks">Задачи</button>
+        <button class="bottom-tab is-active" type="button" data-mobile-tab="week">Неделя</button>
+      </nav>
+    </div>
+
+    <div id="notification-root" class="notification-root" aria-live="assertive"></div>
+
+    <div id="planning-modal" class="modal-backdrop" hidden>
+      <div class="planning-modal" role="dialog" aria-modal="true" aria-labelledby="planning-modal-title">
+        <header class="planning-modal-header">
+          <h2 id="planning-modal-title">Запланировать задачу</h2>
+          <button id="planning-modal-close" class="icon-button" type="button" aria-label="Закрыть">
+            x
+          </button>
+        </header>
+        <p id="planning-task-title" class="planning-task-title"></p>
+        <div id="planning-task-options" class="planning-date-options"></div>
+        <div id="planning-date-options" class="planning-date-options"></div>
+      </div>
+    </div>
+
+    <div id="task-details-modal" class="modal-backdrop" hidden>
+      <div class="task-details-modal" role="dialog" aria-modal="true" aria-labelledby="task-details-title">
+        <header class="planning-modal-header">
+          <h2 id="task-details-title">Детали задачи</h2>
+          <button id="task-details-close" class="icon-button" type="button" aria-label="Закрыть">
+            x
+          </button>
+        </header>
+
+        <form id="task-details-form" class="task-details-form">
+          <label class="task-field">
+            <span>Название</span>
+            <input id="task-details-title-input" type="text" required />
+          </label>
+
+          <label class="task-field">
+            <span>Папка</span>
+            <select id="task-details-folder-input"></select>
+          </label>
+
+          <label class="task-field">
+            <span>Важность</span>
+            <select id="task-details-importance-input">
+              <option value="urgent_important">Срочно/важно</option>
+              <option value="important">Важно</option>
+              <option value="not_important">Не важно</option>
+            </select>
+          </label>
+
+          <section class="checklist-section" aria-labelledby="checklist-title">
+            <div class="checklist-heading">
+              <h3 id="checklist-title">Чек-лист</h3>
+              <span id="checklist-counter" class="checklist-counter">0/0</span>
+            </div>
+            <div id="checklist-items" class="checklist-items"></div>
+            <div class="checklist-add">
+              <input id="checklist-new-item-input" type="text" placeholder="Новый пункт" />
+              <button id="checklist-add-button" class="button-secondary" type="button">
+                Добавить
+              </button>
+            </div>
+          </section>
+
+          <div class="task-details-actions">
+            <button class="button-primary" type="submit">Сохранить</button>
+            <button id="task-status-toggle-button" class="button-secondary" type="button">Выполнено</button>
+            <button id="task-delete-button" class="danger-button" type="button">Удалить задачу</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
